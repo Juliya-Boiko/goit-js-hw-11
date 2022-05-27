@@ -1,9 +1,27 @@
 import axios from "axios";
+import { Notify } from 'notiflix/build/notiflix-notify-aio';
 
-export const getImages = async ({ page, perPage, value }) => {
-    const APIkey = '27622975-8053d8179d4dd5adbee6b248d';
-    const URL = `https://pixabay.com/api/?key=${APIkey}&q=${value}&image_type=photo&orientation=horizontal&safesearch=true&page=${page}&per_page=${perPage}&fields=webformatURL,largeImageURL,tags,likes,views,comments,downloads`;
+const API_KEY = '27622975-8053d8179d4dd5adbee6b248d';
+const BASE_URL = 'https://pixabay.com/api/';
 
-    const result = await axios.get(URL).catch((error) => { console.log(error) });
-    return result;
+export const imgParams = {
+    q: "",
+    image_type: "photo",
+    orientation: "horizontal",
+    safesearch: true,
+    per_page: 40,
+    page: 1
+}
+
+const customAxios = axios.create({
+    baseURL: `${BASE_URL}?key=${API_KEY}`
+});
+
+export const getImages = async (params) => {
+    try {
+        const result = await customAxios.get('', { params });
+        return result;
+    } catch {
+        Notify.failure('Sorry, its data error');
+    }
 }

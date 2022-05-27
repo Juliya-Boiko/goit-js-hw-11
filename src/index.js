@@ -1,20 +1,22 @@
 import './sass/main.scss';
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
+import { imgParams } from './js/getImages';
 import { getImages } from './js/getImages';
 import { markupResult } from './js/markupResult';
 
 const form = document.querySelector('#search-form');
 const gallery = document.querySelector('.gallery');
-const loadMoreBtn = document.querySelector('.load-more');
-const params = {
-    page: 1,
-    perPage: 40,
+const sentinal = document.querySelector('.sentinal');
+const options = {
+    rootMargin: '200px',
 };
+const observer = new IntersectionObserver(onEntry, options);
 
 const onFormSubmit = (evt) => {
+    observer.disconnect();
     evt.preventDefault();
-    loadMoreBtn.classList.add('is-hidden');
-    params.page = 1;
+    imgParams.q = '';
+    imgParams.page = 1;
     gallery.innerHTML = '';
     eventHandler(evt);
 }
@@ -23,9 +25,10 @@ const eventHandler = (evt) => {
     if (evt.target.elements.searchQuery.value === '') {
         Notify.info('Please, enter a word for search!');
     } else {
-        params.value = evt.target.elements.searchQuery.value;
-        getImages(params).then((result) => {
+        imgParams.q = evt.target.elements.searchQuery.value;
+        getImages(imgParams).then((result) => {
             createGallery(result.data);
+            observer.observe(sentinal);
         });
     } 
 }
@@ -36,31 +39,20 @@ const createGallery = (object) => {
     if (hitsArray.length === 0) {
         Notify.failure('Sorry, there are no images matching your search query. Please try again');
     } else {
-        if (params.page === 1) {
-            Notify.success(`Hooray! We found ${totalHits} images`);   
-        }
+        Notify.success(`Hooray! We found ${totalHits} images`);
         markupResult(hitsArray, gallery);
-        if (params.page > 1) {
-            const { height: cardHeight } = document
-                .querySelector(".gallery")
-                .firstElementChild.getBoundingClientRect();
-
-            window.scrollBy({
-                top: cardHeight * 2,
-                behavior: "smooth",
-            });
-        }
-        if (totalHits > params.perPage) {
-            loadMoreBtn.classList.remove('is-hidden');
-        } else (loadMoreBtn.classList.add('is-hidden'));
+        imgParams.page += 1;
     }
 }
 
-const onLoadMoreBtnCkick = () => {
-    params.page += 1;
-    getImages(params).then((result) => { createGallery(result.data) });
-    gallery.refresh();
+function onEntry(entries) {
+    entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+            getImages(imgParams).then((result) => {
+                createGallery(result.data);
+            });
+        }
+    })
 }
 
 form.addEventListener('submit', onFormSubmit);
-loadMoreBtn.addEventListener('click', onLoadMoreBtnCkick);
