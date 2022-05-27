@@ -39,7 +39,10 @@ const createGallery = (object) => {
     if (hitsArray.length === 0) {
         Notify.failure('Sorry, there are no images matching your search query. Please try again');
     } else {
+        if (imgParams.page === 1) {
         Notify.success(`Hooray! We found ${totalHits} images`);
+            
+        }
         markupResult(hitsArray, gallery);
         imgParams.page += 1;
     }
